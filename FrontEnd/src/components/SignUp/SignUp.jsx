@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Navbar from '../../Navbar';
+import Swal from 'sweetalert2';
+import { useEffect } from 'react';
 
 function SignUp() {
     const [signUp, setSignUp] = useState({
@@ -16,8 +18,28 @@ function SignUp() {
 
     const { ID, name, email, password, confirmPassword } = signUp;
 
+     useEffect(() =>{
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/sweetalert2@11"
+        script.async = true;
+         script.onload = () => {
+        // Safe to use Swal now
+        window.Swal = window.Swal || window.swal; // in case of lowercase fallback
+      };
+        document.body.append(script);
+      }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        Swal.fire({
+            title: "Processing...",
+            text: "Please wait while we confirm your booking.",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         if (password !== confirmPassword) {
             alert('Passwords do not match');
@@ -25,7 +47,7 @@ function SignUp() {
         }
 
         try {
-            const response = await fetch(`http://localhost:8000/sign-up`, {
+            const response = await fetch(`http://localhost:8000/api/sign-up`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(signUp),
@@ -34,10 +56,29 @@ function SignUp() {
             const data = await response.json();
 
             if (response.ok) {
-                alert('Sign up successful');
-                
+                Swal.fire({
+                    title: "Success!",
+                    text: "Signup successfuly!",
+                    icon: "success",
+                    customClass: {
+                        popup: "small-popup",
+                        title: "small-title",
+                        icon: "small-icon",
+                        confirmButton: "small-button"
+                    }
+                }).then(() => {
+                    window.location.href = '/';
+                    setContact({ ID: '', name: '', email: '', password: '', confirmPassword: '' });
+                })
+                // alert('Sign up successful');
+
             } else {
-                alert(data.message || 'Sign up failed');
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: "Something went wrong!",
+                });
+                // alert(data.message || 'Sign up failed');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -53,8 +94,8 @@ function SignUp() {
                     <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">Sign Up</h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">ID:</label>
-                        <input
+                            <label className="block text-sm font-medium text-gray-700 mb-1">ID:</label>
+                            <input
                                 type="text"
                                 name="ID"
                                 value={signUp.ID}

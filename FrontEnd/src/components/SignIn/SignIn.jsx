@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Navbar from '../../Navbar';
+import Swal from 'sweetalert2';
+import { useEffect } from 'react';
 
 function SignIn() {
   const [signIn, setsignIn] = useState({
@@ -11,12 +13,32 @@ function SignIn() {
     setsignIn({ ...signIn, [e.target.name]: e.target.value });
   };
 
+   useEffect(() =>{
+      const script = document.createElement('script');
+      script.src = "https://cdn.jsdelivr.net/npm/sweetalert2@11"
+      script.async = true;
+       script.onload = () => {
+      // Safe to use Swal now
+      window.Swal = window.Swal || window.swal; // in case of lowercase fallback
+    };
+      document.body.append(script);
+    }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Signing in with:', signIn);
     // Add login logic/API call here
+     Swal.fire({
+          title: "Processing...",
+          text: "Please wait while we confirm your booking.",
+          allowOutsideClick: false,
+          didOpen: () => {
+              Swal.showLoading();
+          }
+      });
+
     try {
-      const response = await fetch('http://localhost:8000/sign-in',{
+      const response = await fetch('http://localhost:8000/api/sign-in',{
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(signIn),
@@ -27,11 +49,30 @@ function SignIn() {
       
 
       if (response.ok) {
-        window.location.href = '/';
-        console.log("data.message ||", data.message);
+         Swal.fire({
+            title: "Success!",
+            text: "Login successfuly!",
+            icon: "success",
+            customClass : {
+            popup: "small-popup",
+            title: "small-title",
+            icon: "small-icon",
+            confirmButton: "small-button"
+            }
+        }).then(()=>{
+            window.location.href = '/';
+            setContact({ email: '', password :''});
+        })
+        // window.location.href = '/';
+        // console.log("data.message ||", data.message);
         
       }else{
-        alert(data.message ||'Sign in failed');
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Something went wrong!",
+          });
+        // alert(data.message ||'Sign in failed');
       }
     } catch (error) {
       console.log('Error:', error);
